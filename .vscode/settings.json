@@ -1,0 +1,10 @@
+{
+  "java.compile.nullAnalysis.mode": "automatic",
+    "dart.lineLength": 160,
+    "[dart]": {
+      "editor.rulers": [
+          160
+      ]
+    },
+    "java.configuration.updateBuildConfiguration": "automatic"
+}
