@@ -8,7 +8,6 @@ class BodyProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('state: $state');
     return state != ConnectionState.waiting
         ? child
         : Stack(

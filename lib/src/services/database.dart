@@ -24,6 +24,7 @@ class ArtistTable extends Table {
 class AlbumTable extends Table {
   TextColumn get albumId => text()();
   TextColumn get name => text()();
+  TextColumn get thumbnail => text()();
 
   @override
   Set<Column> get primaryKey => {albumId};
@@ -32,6 +33,7 @@ class AlbumTable extends Table {
     return AlbumTableCompanion.insert(
       albumId: album.albumId,
       name: album.name,
+      thumbnail: album.thumbnail ?? "",
     );
   }
 }
@@ -42,7 +44,8 @@ class PlaylistTable extends Table {
   TextColumn get name => text()();
   TextColumn get artistId => text().references(ArtistTable, #artistId)();
   IntColumn get videoCount => integer()();
-  TextColumn get thumbnail => text()();
+  TextColumn get smallThumb => text()();
+  TextColumn get largeThumb => text()();
   DateTimeColumn get createdAt => dateTime()();
 
   @override
@@ -55,7 +58,8 @@ class PlaylistTable extends Table {
       name: playlist.name,
       artistId: playlist.artist.id,
       videoCount: playlist.videoCount,
-      thumbnail: playlist.thumbnail,
+      smallThumb: playlist.smallThumb,
+      largeThumb: playlist.largeThumb,
       createdAt: DateTime.now(),
     );
   }
@@ -138,16 +142,21 @@ class DatabaseService {
 
   Future<List<PlaylistFull>> loadPlaylists() async {
     final select = await (_db.select(_db.playlistTable)..orderBy([(p) => OrderingTerm(expression: p.name)])).get();
-    return await Future.wait(select.map(dataToPlaylist));
+    return await Future.wait(select.map(_dataToPlaylist));
   }
 
-  Future<PlaylistFull> dataToPlaylist(PlaylistTableData data) async {
+  Future<bool> removePlaylist(String playlistId) async {
+    final count = await (_db.delete(_db.playlistTable)..where((e) => e.playlistId.equals(playlistId))).go();
+    return count > 0;
+  }
+
+  Future<PlaylistFull> _dataToPlaylist(PlaylistTableData data) async {
     var artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
     var tracks = await (_db.select(_db.playlistTrackTable)..where((e) => e.playlistId.equals(data.playlistId))).get();
-    return PlaylistFull.fromData(data, ArtistBasic.fromData(artist), await Future.wait(tracks.map(dataToTrack)));
+    return PlaylistFull.fromData(data, ArtistBasic.fromData(artist), await Future.wait(tracks.map(_dataToTrack)));
   }
 
-  Future<PlaylistTrack> dataToTrack(PlaylistTrackTableData data) async {
+  Future<PlaylistTrack> _dataToTrack(PlaylistTrackTableData data) async {
     var artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
     var album = await (_db.select(_db.albumTable)..where((e) => e.albumId.equals(data.albumId))).getSingle();
     return PlaylistTrack.fromData(data, ArtistBasic.fromData(artist), AlbumBasic.fromData(album));

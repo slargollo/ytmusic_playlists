@@ -32,57 +32,67 @@ class _AddPlaylistFormState extends State<AddPlaylistForm> {
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
   Future<PlaylistFull?>? _playlist;
   final List<PlaylistFull> _list = [];
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  bool _changed = false;
 
   @override
   void dispose() {
+    _changed = false;
     _list.clear();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _playlist,
-      builder: (BuildContext context, AsyncSnapshot<PlaylistFull?> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasData) {
-            final play = snapshot.data as PlaylistFull;
-            if (!_list.contains(play)) {
-              _list.add(play);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Future.delayed(Duration.zero, () {
+            if (context.mounted) {
+              Navigator.pop(context, _changed);
             }
-            SchedulerBinding.instance.addPostFrameCallback((tm) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Playlist successfully added.'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            });
-          } else {
-            SchedulerBinding.instance.addPostFrameCallback((tm) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('The playlist was not found or an error occurred while retrieving it. Check if the URL or playlist ID is correct.'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            });
-          }
+          });
         }
-        return BodyProgress(
-          state: snapshot.connectionState,
-          child: AddPlayListBody(
-            formKey: _formKey,
-            playLists: _list,
-            onPressed: _addPlayList,
-          ),
-        );
       },
+      child: FutureBuilder(
+        future: _playlist,
+        builder: (BuildContext context, AsyncSnapshot<PlaylistFull?> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              final play = snapshot.data as PlaylistFull;
+              if (!_list.contains(play)) {
+                _list.add(play);
+                _changed = true;
+              }
+              SchedulerBinding.instance.addPostFrameCallback((tm) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Playlist successfully added.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              });
+            } else {
+              SchedulerBinding.instance.addPostFrameCallback((tm) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('The playlist was not found or an error occurred while retrieving it. Check if the URL or playlist ID is correct.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              });
+            }
+          }
+          return BodyProgress(
+            state: snapshot.connectionState,
+            child: AddPlayListBody(
+              formKey: _formKey,
+              playLists: _list,
+              onPressed: _addPlayList,
+            ),
+          );
+        },
+      ),
     );
   }
 

@@ -72,6 +72,7 @@ class ArtistBasic {
 class AlbumBasic {
   final String albumId;
   final String name;
+  String? thumbnail;
 
   AlbumBasic({
     required this.albumId,
@@ -85,7 +86,8 @@ class AlbumBasic {
 
   AlbumBasic.fromData(AlbumTableData data)
       : albumId = data.albumId,
-        name = data.name;
+        name = data.name,
+        thumbnail = data.thumbnail;
 }
 
 class SongDetailed {
@@ -371,7 +373,8 @@ class PlaylistFull {
   final ArtistBasic artist;
   final int videoCount;
   final List<PlaylistTrack> tracks;
-  String? _thumbnail;
+  String? _smallThumb;
+  String? _largeThumb;
 
   PlaylistFull({
     required this.type,
@@ -382,17 +385,21 @@ class PlaylistFull {
     required List<ThumbnailFull> thumbnails,
     required this.tracks,
   }) {
-    _thumbnail = (thumbnails.where((thumb) => thumb.width >= 96).firstOrNull ?? thumbnails.first).url;
+    _smallThumb = (thumbnails.where((thumb) => thumb.width >= 96).firstOrNull ?? thumbnails.first).url;
+    _largeThumb = (thumbnails.where((thumb) => thumb.width >= 200).firstOrNull ?? thumbnails.first).url;
   }
 
   PlaylistFull.fromData(PlaylistTableData data, this.artist, this.tracks)
       : type = data.type,
         playlistId = data.playlistId,
         name = data.name,
-        _thumbnail = data.thumbnail,
+        _smallThumb = data.smallThumb,
+        _largeThumb = data.largeThumb,
         videoCount = data.videoCount;
 
-  String get thumbnail => _thumbnail!;
+  String get smallThumb => _smallThumb!;
+
+  String get largeThumb => _largeThumb!;
 
   @override
   bool operator ==(Object other) => other is PlaylistFull && other.playlistId == playlistId;

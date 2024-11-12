@@ -13,14 +13,27 @@ class YTMusicService {
 
   Future<PlaylistFull?> addPlaylist(String idOrUrl) async {
     String playlistId;
-    if (idOrUrl.contains('?')) {
-      playlistId = idOrUrl.split('?')[1].split('&')[0].split('=')[1];
-    } else {
-      playlistId = idOrUrl;
+    PlaylistFull? playlist;
+    try {
+      if (idOrUrl.contains('?')) {
+        playlistId = idOrUrl.split('?')[1].split('&')[0].split('=')[1];
+      } else {
+        playlistId = idOrUrl;
+      }
+      playlist = await _ytMusic.getPlaylist(playlistId);
+      // for (var track in playlist.tracks) {
+      //   final album = await _ytMusic.getAlbum(track.album.albumId);
+      //   track.album.thumbnail = (album.thumbnails.where((t) => t.width >= 96).firstOrNull ?? album.thumbnails.first).url;
+      // }
+      await Services.db.addPlaylist(playlist);
+    } catch (err) {
+      print(err);
     }
-    final playlist = await _ytMusic.getPlaylist(playlistId);
-    await Services.db.addPlaylist(playlist);
     return playlist;
+  }
+
+  Future<bool> removePlaylist(String playlistId) async {
+    return await Services.db.removePlaylist(playlistId);
   }
 
   // Future<List<SongDetailed>> searchSongs(String query) async {

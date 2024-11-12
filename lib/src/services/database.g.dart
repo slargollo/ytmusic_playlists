@@ -255,8 +255,14 @@ class $AlbumTableTable extends AlbumTable
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _thumbnailMeta =
+      const VerificationMeta('thumbnail');
   @override
-  List<GeneratedColumn> get $columns => [albumId, name];
+  late final GeneratedColumn<String> thumbnail = GeneratedColumn<String>(
+      'thumbnail', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [albumId, name, thumbnail];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -279,6 +285,12 @@ class $AlbumTableTable extends AlbumTable
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
+    if (data.containsKey('thumbnail')) {
+      context.handle(_thumbnailMeta,
+          thumbnail.isAcceptableOrUnknown(data['thumbnail']!, _thumbnailMeta));
+    } else if (isInserting) {
+      context.missing(_thumbnailMeta);
+    }
     return context;
   }
 
@@ -292,6 +304,8 @@ class $AlbumTableTable extends AlbumTable
           .read(DriftSqlType.string, data['${effectivePrefix}album_id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      thumbnail: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}thumbnail'])!,
     );
   }
 
@@ -304,12 +318,15 @@ class $AlbumTableTable extends AlbumTable
 class AlbumTableData extends DataClass implements Insertable<AlbumTableData> {
   final String albumId;
   final String name;
-  const AlbumTableData({required this.albumId, required this.name});
+  final String thumbnail;
+  const AlbumTableData(
+      {required this.albumId, required this.name, required this.thumbnail});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['album_id'] = Variable<String>(albumId);
     map['name'] = Variable<String>(name);
+    map['thumbnail'] = Variable<String>(thumbnail);
     return map;
   }
 
@@ -317,6 +334,7 @@ class AlbumTableData extends DataClass implements Insertable<AlbumTableData> {
     return AlbumTableCompanion(
       albumId: Value(albumId),
       name: Value(name),
+      thumbnail: Value(thumbnail),
     );
   }
 
@@ -326,6 +344,7 @@ class AlbumTableData extends DataClass implements Insertable<AlbumTableData> {
     return AlbumTableData(
       albumId: serializer.fromJson<String>(json['albumId']),
       name: serializer.fromJson<String>(json['name']),
+      thumbnail: serializer.fromJson<String>(json['thumbnail']),
     );
   }
   @override
@@ -334,17 +353,21 @@ class AlbumTableData extends DataClass implements Insertable<AlbumTableData> {
     return <String, dynamic>{
       'albumId': serializer.toJson<String>(albumId),
       'name': serializer.toJson<String>(name),
+      'thumbnail': serializer.toJson<String>(thumbnail),
     };
   }
 
-  AlbumTableData copyWith({String? albumId, String? name}) => AlbumTableData(
+  AlbumTableData copyWith({String? albumId, String? name, String? thumbnail}) =>
+      AlbumTableData(
         albumId: albumId ?? this.albumId,
         name: name ?? this.name,
+        thumbnail: thumbnail ?? this.thumbnail,
       );
   AlbumTableData copyWithCompanion(AlbumTableCompanion data) {
     return AlbumTableData(
       albumId: data.albumId.present ? data.albumId.value : this.albumId,
       name: data.name.present ? data.name.value : this.name,
+      thumbnail: data.thumbnail.present ? data.thumbnail.value : this.thumbnail,
     );
   }
 
@@ -352,53 +375,65 @@ class AlbumTableData extends DataClass implements Insertable<AlbumTableData> {
   String toString() {
     return (StringBuffer('AlbumTableData(')
           ..write('albumId: $albumId, ')
-          ..write('name: $name')
+          ..write('name: $name, ')
+          ..write('thumbnail: $thumbnail')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(albumId, name);
+  int get hashCode => Object.hash(albumId, name, thumbnail);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is AlbumTableData &&
           other.albumId == this.albumId &&
-          other.name == this.name);
+          other.name == this.name &&
+          other.thumbnail == this.thumbnail);
 }
 
 class AlbumTableCompanion extends UpdateCompanion<AlbumTableData> {
   final Value<String> albumId;
   final Value<String> name;
+  final Value<String> thumbnail;
   final Value<int> rowid;
   const AlbumTableCompanion({
     this.albumId = const Value.absent(),
     this.name = const Value.absent(),
+    this.thumbnail = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AlbumTableCompanion.insert({
     required String albumId,
     required String name,
+    required String thumbnail,
     this.rowid = const Value.absent(),
   })  : albumId = Value(albumId),
-        name = Value(name);
+        name = Value(name),
+        thumbnail = Value(thumbnail);
   static Insertable<AlbumTableData> custom({
     Expression<String>? albumId,
     Expression<String>? name,
+    Expression<String>? thumbnail,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (albumId != null) 'album_id': albumId,
       if (name != null) 'name': name,
+      if (thumbnail != null) 'thumbnail': thumbnail,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   AlbumTableCompanion copyWith(
-      {Value<String>? albumId, Value<String>? name, Value<int>? rowid}) {
+      {Value<String>? albumId,
+      Value<String>? name,
+      Value<String>? thumbnail,
+      Value<int>? rowid}) {
     return AlbumTableCompanion(
       albumId: albumId ?? this.albumId,
       name: name ?? this.name,
+      thumbnail: thumbnail ?? this.thumbnail,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -412,6 +447,9 @@ class AlbumTableCompanion extends UpdateCompanion<AlbumTableData> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (thumbnail.present) {
+      map['thumbnail'] = Variable<String>(thumbnail.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -423,6 +461,7 @@ class AlbumTableCompanion extends UpdateCompanion<AlbumTableData> {
     return (StringBuffer('AlbumTableCompanion(')
           ..write('albumId: $albumId, ')
           ..write('name: $name, ')
+          ..write('thumbnail: $thumbnail, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -466,11 +505,17 @@ class $PlaylistTableTable extends PlaylistTable
   late final GeneratedColumn<int> videoCount = GeneratedColumn<int>(
       'video_count', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _thumbnailMeta =
-      const VerificationMeta('thumbnail');
+  static const VerificationMeta _smallThumbMeta =
+      const VerificationMeta('smallThumb');
   @override
-  late final GeneratedColumn<String> thumbnail = GeneratedColumn<String>(
-      'thumbnail', aliasedName, false,
+  late final GeneratedColumn<String> smallThumb = GeneratedColumn<String>(
+      'small_thumb', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _largeThumbMeta =
+      const VerificationMeta('largeThumb');
+  @override
+  late final GeneratedColumn<String> largeThumb = GeneratedColumn<String>(
+      'large_thumb', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
@@ -479,8 +524,16 @@ class $PlaylistTableTable extends PlaylistTable
       'created_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns =>
-      [playlistId, type, name, artistId, videoCount, thumbnail, createdAt];
+  List<GeneratedColumn> get $columns => [
+        playlistId,
+        type,
+        name,
+        artistId,
+        videoCount,
+        smallThumb,
+        largeThumb,
+        createdAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -525,11 +578,21 @@ class $PlaylistTableTable extends PlaylistTable
     } else if (isInserting) {
       context.missing(_videoCountMeta);
     }
-    if (data.containsKey('thumbnail')) {
-      context.handle(_thumbnailMeta,
-          thumbnail.isAcceptableOrUnknown(data['thumbnail']!, _thumbnailMeta));
+    if (data.containsKey('small_thumb')) {
+      context.handle(
+          _smallThumbMeta,
+          smallThumb.isAcceptableOrUnknown(
+              data['small_thumb']!, _smallThumbMeta));
     } else if (isInserting) {
-      context.missing(_thumbnailMeta);
+      context.missing(_smallThumbMeta);
+    }
+    if (data.containsKey('large_thumb')) {
+      context.handle(
+          _largeThumbMeta,
+          largeThumb.isAcceptableOrUnknown(
+              data['large_thumb']!, _largeThumbMeta));
+    } else if (isInserting) {
+      context.missing(_largeThumbMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -556,8 +619,10 @@ class $PlaylistTableTable extends PlaylistTable
           .read(DriftSqlType.string, data['${effectivePrefix}artist_id'])!,
       videoCount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}video_count'])!,
-      thumbnail: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}thumbnail'])!,
+      smallThumb: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}small_thumb'])!,
+      largeThumb: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}large_thumb'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -576,7 +641,8 @@ class PlaylistTableData extends DataClass
   final String name;
   final String artistId;
   final int videoCount;
-  final String thumbnail;
+  final String smallThumb;
+  final String largeThumb;
   final DateTime createdAt;
   const PlaylistTableData(
       {required this.playlistId,
@@ -584,7 +650,8 @@ class PlaylistTableData extends DataClass
       required this.name,
       required this.artistId,
       required this.videoCount,
-      required this.thumbnail,
+      required this.smallThumb,
+      required this.largeThumb,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -594,7 +661,8 @@ class PlaylistTableData extends DataClass
     map['name'] = Variable<String>(name);
     map['artist_id'] = Variable<String>(artistId);
     map['video_count'] = Variable<int>(videoCount);
-    map['thumbnail'] = Variable<String>(thumbnail);
+    map['small_thumb'] = Variable<String>(smallThumb);
+    map['large_thumb'] = Variable<String>(largeThumb);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -606,7 +674,8 @@ class PlaylistTableData extends DataClass
       name: Value(name),
       artistId: Value(artistId),
       videoCount: Value(videoCount),
-      thumbnail: Value(thumbnail),
+      smallThumb: Value(smallThumb),
+      largeThumb: Value(largeThumb),
       createdAt: Value(createdAt),
     );
   }
@@ -620,7 +689,8 @@ class PlaylistTableData extends DataClass
       name: serializer.fromJson<String>(json['name']),
       artistId: serializer.fromJson<String>(json['artistId']),
       videoCount: serializer.fromJson<int>(json['videoCount']),
-      thumbnail: serializer.fromJson<String>(json['thumbnail']),
+      smallThumb: serializer.fromJson<String>(json['smallThumb']),
+      largeThumb: serializer.fromJson<String>(json['largeThumb']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -633,7 +703,8 @@ class PlaylistTableData extends DataClass
       'name': serializer.toJson<String>(name),
       'artistId': serializer.toJson<String>(artistId),
       'videoCount': serializer.toJson<int>(videoCount),
-      'thumbnail': serializer.toJson<String>(thumbnail),
+      'smallThumb': serializer.toJson<String>(smallThumb),
+      'largeThumb': serializer.toJson<String>(largeThumb),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -644,7 +715,8 @@ class PlaylistTableData extends DataClass
           String? name,
           String? artistId,
           int? videoCount,
-          String? thumbnail,
+          String? smallThumb,
+          String? largeThumb,
           DateTime? createdAt}) =>
       PlaylistTableData(
         playlistId: playlistId ?? this.playlistId,
@@ -652,7 +724,8 @@ class PlaylistTableData extends DataClass
         name: name ?? this.name,
         artistId: artistId ?? this.artistId,
         videoCount: videoCount ?? this.videoCount,
-        thumbnail: thumbnail ?? this.thumbnail,
+        smallThumb: smallThumb ?? this.smallThumb,
+        largeThumb: largeThumb ?? this.largeThumb,
         createdAt: createdAt ?? this.createdAt,
       );
   PlaylistTableData copyWithCompanion(PlaylistTableCompanion data) {
@@ -664,7 +737,10 @@ class PlaylistTableData extends DataClass
       artistId: data.artistId.present ? data.artistId.value : this.artistId,
       videoCount:
           data.videoCount.present ? data.videoCount.value : this.videoCount,
-      thumbnail: data.thumbnail.present ? data.thumbnail.value : this.thumbnail,
+      smallThumb:
+          data.smallThumb.present ? data.smallThumb.value : this.smallThumb,
+      largeThumb:
+          data.largeThumb.present ? data.largeThumb.value : this.largeThumb,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -677,15 +753,16 @@ class PlaylistTableData extends DataClass
           ..write('name: $name, ')
           ..write('artistId: $artistId, ')
           ..write('videoCount: $videoCount, ')
-          ..write('thumbnail: $thumbnail, ')
+          ..write('smallThumb: $smallThumb, ')
+          ..write('largeThumb: $largeThumb, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      playlistId, type, name, artistId, videoCount, thumbnail, createdAt);
+  int get hashCode => Object.hash(playlistId, type, name, artistId, videoCount,
+      smallThumb, largeThumb, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -695,7 +772,8 @@ class PlaylistTableData extends DataClass
           other.name == this.name &&
           other.artistId == this.artistId &&
           other.videoCount == this.videoCount &&
-          other.thumbnail == this.thumbnail &&
+          other.smallThumb == this.smallThumb &&
+          other.largeThumb == this.largeThumb &&
           other.createdAt == this.createdAt);
 }
 
@@ -705,7 +783,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
   final Value<String> name;
   final Value<String> artistId;
   final Value<int> videoCount;
-  final Value<String> thumbnail;
+  final Value<String> smallThumb;
+  final Value<String> largeThumb;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const PlaylistTableCompanion({
@@ -714,7 +793,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
     this.name = const Value.absent(),
     this.artistId = const Value.absent(),
     this.videoCount = const Value.absent(),
-    this.thumbnail = const Value.absent(),
+    this.smallThumb = const Value.absent(),
+    this.largeThumb = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -724,7 +804,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
     required String name,
     required String artistId,
     required int videoCount,
-    required String thumbnail,
+    required String smallThumb,
+    required String largeThumb,
     required DateTime createdAt,
     this.rowid = const Value.absent(),
   })  : playlistId = Value(playlistId),
@@ -732,7 +813,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
         name = Value(name),
         artistId = Value(artistId),
         videoCount = Value(videoCount),
-        thumbnail = Value(thumbnail),
+        smallThumb = Value(smallThumb),
+        largeThumb = Value(largeThumb),
         createdAt = Value(createdAt);
   static Insertable<PlaylistTableData> custom({
     Expression<String>? playlistId,
@@ -740,7 +822,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
     Expression<String>? name,
     Expression<String>? artistId,
     Expression<int>? videoCount,
-    Expression<String>? thumbnail,
+    Expression<String>? smallThumb,
+    Expression<String>? largeThumb,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -750,7 +833,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
       if (name != null) 'name': name,
       if (artistId != null) 'artist_id': artistId,
       if (videoCount != null) 'video_count': videoCount,
-      if (thumbnail != null) 'thumbnail': thumbnail,
+      if (smallThumb != null) 'small_thumb': smallThumb,
+      if (largeThumb != null) 'large_thumb': largeThumb,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -762,7 +846,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
       Value<String>? name,
       Value<String>? artistId,
       Value<int>? videoCount,
-      Value<String>? thumbnail,
+      Value<String>? smallThumb,
+      Value<String>? largeThumb,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return PlaylistTableCompanion(
@@ -771,7 +856,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
       name: name ?? this.name,
       artistId: artistId ?? this.artistId,
       videoCount: videoCount ?? this.videoCount,
-      thumbnail: thumbnail ?? this.thumbnail,
+      smallThumb: smallThumb ?? this.smallThumb,
+      largeThumb: largeThumb ?? this.largeThumb,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -795,8 +881,11 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
     if (videoCount.present) {
       map['video_count'] = Variable<int>(videoCount.value);
     }
-    if (thumbnail.present) {
-      map['thumbnail'] = Variable<String>(thumbnail.value);
+    if (smallThumb.present) {
+      map['small_thumb'] = Variable<String>(smallThumb.value);
+    }
+    if (largeThumb.present) {
+      map['large_thumb'] = Variable<String>(largeThumb.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -815,7 +904,8 @@ class PlaylistTableCompanion extends UpdateCompanion<PlaylistTableData> {
           ..write('name: $name, ')
           ..write('artistId: $artistId, ')
           ..write('videoCount: $videoCount, ')
-          ..write('thumbnail: $thumbnail, ')
+          ..write('smallThumb: $smallThumb, ')
+          ..write('largeThumb: $largeThumb, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1532,11 +1622,13 @@ typedef $$ArtistTableTableProcessedTableManager = ProcessedTableManager<
 typedef $$AlbumTableTableCreateCompanionBuilder = AlbumTableCompanion Function({
   required String albumId,
   required String name,
+  required String thumbnail,
   Value<int> rowid,
 });
 typedef $$AlbumTableTableUpdateCompanionBuilder = AlbumTableCompanion Function({
   Value<String> albumId,
   Value<String> name,
+  Value<String> thumbnail,
   Value<int> rowid,
 });
 
@@ -1578,6 +1670,9 @@ class $$AlbumTableTableFilterComposer
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get thumbnail => $composableBuilder(
+      column: $table.thumbnail, builder: (column) => ColumnFilters(column));
+
   Expression<bool> playlistTrackTableRefs(
       Expression<bool> Function($$PlaylistTrackTableTableFilterComposer f) f) {
     final $$PlaylistTrackTableTableFilterComposer composer = $composerBuilder(
@@ -1614,6 +1709,9 @@ class $$AlbumTableTableOrderingComposer
 
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get thumbnail => $composableBuilder(
+      column: $table.thumbnail, builder: (column) => ColumnOrderings(column));
 }
 
 class $$AlbumTableTableAnnotationComposer
@@ -1630,6 +1728,9 @@ class $$AlbumTableTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get thumbnail =>
+      $composableBuilder(column: $table.thumbnail, builder: (column) => column);
 
   Expression<T> playlistTrackTableRefs<T extends Object>(
       Expression<T> Function($$PlaylistTrackTableTableAnnotationComposer a) f) {
@@ -1679,21 +1780,25 @@ class $$AlbumTableTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> albumId = const Value.absent(),
             Value<String> name = const Value.absent(),
+            Value<String> thumbnail = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AlbumTableCompanion(
             albumId: albumId,
             name: name,
+            thumbnail: thumbnail,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String albumId,
             required String name,
+            required String thumbnail,
             Value<int> rowid = const Value.absent(),
           }) =>
               AlbumTableCompanion.insert(
             albumId: albumId,
             name: name,
+            thumbnail: thumbnail,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -1749,7 +1854,8 @@ typedef $$PlaylistTableTableCreateCompanionBuilder = PlaylistTableCompanion
   required String name,
   required String artistId,
   required int videoCount,
-  required String thumbnail,
+  required String smallThumb,
+  required String largeThumb,
   required DateTime createdAt,
   Value<int> rowid,
 });
@@ -1760,7 +1866,8 @@ typedef $$PlaylistTableTableUpdateCompanionBuilder = PlaylistTableCompanion
   Value<String> name,
   Value<String> artistId,
   Value<int> videoCount,
-  Value<String> thumbnail,
+  Value<String> smallThumb,
+  Value<String> largeThumb,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -1824,8 +1931,11 @@ class $$PlaylistTableTableFilterComposer
   ColumnFilters<int> get videoCount => $composableBuilder(
       column: $table.videoCount, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get thumbnail => $composableBuilder(
-      column: $table.thumbnail, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get smallThumb => $composableBuilder(
+      column: $table.smallThumb, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get largeThumb => $composableBuilder(
+      column: $table.largeThumb, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -1893,8 +2003,11 @@ class $$PlaylistTableTableOrderingComposer
   ColumnOrderings<int> get videoCount => $composableBuilder(
       column: $table.videoCount, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get thumbnail => $composableBuilder(
-      column: $table.thumbnail, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get smallThumb => $composableBuilder(
+      column: $table.smallThumb, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get largeThumb => $composableBuilder(
+      column: $table.largeThumb, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
@@ -1941,8 +2054,11 @@ class $$PlaylistTableTableAnnotationComposer
   GeneratedColumn<int> get videoCount => $composableBuilder(
       column: $table.videoCount, builder: (column) => column);
 
-  GeneratedColumn<String> get thumbnail =>
-      $composableBuilder(column: $table.thumbnail, builder: (column) => column);
+  GeneratedColumn<String> get smallThumb => $composableBuilder(
+      column: $table.smallThumb, builder: (column) => column);
+
+  GeneratedColumn<String> get largeThumb => $composableBuilder(
+      column: $table.largeThumb, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2018,7 +2134,8 @@ class $$PlaylistTableTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<String> artistId = const Value.absent(),
             Value<int> videoCount = const Value.absent(),
-            Value<String> thumbnail = const Value.absent(),
+            Value<String> smallThumb = const Value.absent(),
+            Value<String> largeThumb = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -2028,7 +2145,8 @@ class $$PlaylistTableTableTableManager extends RootTableManager<
             name: name,
             artistId: artistId,
             videoCount: videoCount,
-            thumbnail: thumbnail,
+            smallThumb: smallThumb,
+            largeThumb: largeThumb,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -2038,7 +2156,8 @@ class $$PlaylistTableTableTableManager extends RootTableManager<
             required String name,
             required String artistId,
             required int videoCount,
-            required String thumbnail,
+            required String smallThumb,
+            required String largeThumb,
             required DateTime createdAt,
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -2048,7 +2167,8 @@ class $$PlaylistTableTableTableManager extends RootTableManager<
             name: name,
             artistId: artistId,
             videoCount: videoCount,
-            thumbnail: thumbnail,
+            smallThumb: smallThumb,
+            largeThumb: largeThumb,
             createdAt: createdAt,
             rowid: rowid,
           ),
