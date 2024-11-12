@@ -55,6 +55,7 @@ class HomePlaylistListState extends State<HomePlaylistList> {
             child: PlaylistsView(
               playLists: snapshot.data,
               onRemove: _onRemove,
+              readOnly: false,
             ),
           );
         },
@@ -63,15 +64,17 @@ class HomePlaylistListState extends State<HomePlaylistList> {
   }
 
   void _onRemove(PlaylistFull playlist) {
+    // Não usar => com setState e Future
     setState(() {
-      _rebuildCall = Services.music.removePlaylist(playlist.playlistId).then(
-            (val) => Services.db.loadPlaylists(),
-          );
+      _rebuildCall = Services.music
+          .removePlaylist(playlist.playlistId) //
+          .then((val) => Services.db.loadPlaylists());
     });
   }
 
   void _onRefresh(bool changed) {
     if (changed) {
+      // Não usar => com setState e Future
       setState(() {
         _rebuildCall = Services.db.loadPlaylists();
       });
