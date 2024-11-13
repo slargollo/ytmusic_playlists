@@ -110,6 +110,7 @@ class AppDatabase extends _$AppDatabase {
 class DatabaseService {
   final _db = AppDatabase();
 
+  /// Adiciona uma playlist
   Future<void> addPlaylist(PlaylistFull playlist) async {
     await _db.batch((batch) {
       // Atualiza o artista
@@ -124,36 +125,51 @@ class DatabaseService {
         _db.playlistTable,
         [playlistTb],
       );
-      // Atualiza as tracks
-      batch.insertAllOnConflictUpdate(
-        _db.artistTable,
-        playlist.tracks.map((t) => ArtistTable.insert(t.artist)).toList(),
-      );
-      batch.insertAllOnConflictUpdate(
-        _db.albumTable,
-        playlist.tracks.map((t) => AlbumTable.insert(t.album)).toList(),
-      );
-      batch.insertAll(
-        _db.playlistTrackTable,
-        playlist.tracks.map(PlaylistTrackTable.insert).toList(),
-      );
+      if (playlist.tracks.isNotEmpty) {
+        // Atualiza as tracks
+        batch.insertAllOnConflictUpdate(
+          _db.artistTable,
+          playlist.tracks.map((t) => ArtistTable.insert(t.artist)).toList(),
+        );
+        batch.insertAllOnConflictUpdate(
+          _db.albumTable,
+          playlist.tracks.map((t) => AlbumTable.insert(t.album)).toList(),
+        );
+        batch.insertAll(
+          _db.playlistTrackTable,
+          playlist.tracks.map(PlaylistTrackTable.insert).toList(),
+        );
+      }
     });
   }
 
+  /// Carrega as músicas de uma playlist
+  Future<PlaylistFull> loadTracks(PlaylistFull playlist) async {
+    if (playlist.tracks.isEmpty) {
+      final dbtracks = await (_db.select(_db.playlistTrackTable)..where((e) => e.playlistId.equals(playlist.playlistId))).get();
+      playlist.tracks.addAll(await Future.wait(dbtracks.map(_dataToTrack)));
+    }
+    return playlist;
+  }
+
+  /// Carregas as playlists cadastradas
   Future<List<PlaylistFull>> loadPlaylists() async {
     final select = await (_db.select(_db.playlistTable)..orderBy([(p) => OrderingTerm(expression: p.name)])).get();
     return await Future.wait(select.map(_dataToPlaylist));
   }
 
+  /// Remove uma playlist
   Future<bool> removePlaylist(String playlistId) async {
+    // Exclui as músicas da playlist
+    await (_db.delete(_db.playlistTrackTable)..where((e) => e.playlistId.equals(playlistId))).go();
+    // Exclui a playlist
     final count = await (_db.delete(_db.playlistTable)..where((e) => e.playlistId.equals(playlistId))).go();
     return count > 0;
   }
 
   Future<PlaylistFull> _dataToPlaylist(PlaylistTableData data) async {
     var artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
-    var tracks = await (_db.select(_db.playlistTrackTable)..where((e) => e.playlistId.equals(data.playlistId))).get();
-    return PlaylistFull.fromData(data, ArtistBasic.fromData(artist), await Future.wait(tracks.map(_dataToTrack)));
+    return PlaylistFull.fromData(data, ArtistBasic.fromData(artist), []);
   }
 
   Future<PlaylistTrack> _dataToTrack(PlaylistTrackTableData data) async {

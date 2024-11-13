@@ -398,7 +398,6 @@ class PlaylistFull {
         videoCount = data.videoCount;
 
   String get smallThumb => _smallThumb!;
-
   String get largeThumb => _largeThumb!;
 
   @override

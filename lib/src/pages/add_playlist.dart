@@ -14,7 +14,7 @@ class AddPlaylistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Playlist'),
+        title: Text(local(context).addPlaylistPageTitle),
       ),
       body: const AddPlaylistForm(),
     );
@@ -66,8 +66,8 @@ class _AddPlaylistFormState extends State<AddPlaylistForm> {
               }
               SchedulerBinding.instance.addPostFrameCallback((tm) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Playlist successfully added.'),
+                  SnackBar(
+                    content: Text(local(context).playlistAdded),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -75,8 +75,8 @@ class _AddPlaylistFormState extends State<AddPlaylistForm> {
             } else {
               SchedulerBinding.instance.addPostFrameCallback((tm) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('The playlist was not found or an error occurred while retrieving it. Check if the URL or playlist ID is correct.'),
+                  SnackBar(
+                    content: Text(local(context).playlistNotFoundOrError),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -100,7 +100,14 @@ class _AddPlaylistFormState extends State<AddPlaylistForm> {
     final isValid = _formKey.currentState?.saveAndValidate() ?? false;
     if (isValid) {
       setState(() {
-        _playlist = Services.music.addPlaylist(_formKey.currentState!.fields['playlist_id']!.value!.toString());
+        _playlist = Services.music
+            .addPlaylist(_formKey.currentState!.fields['playlist_id']!.value!.toString()) //
+            .then((val) {
+          if (val != null) {
+            _formKey.currentState?.reset();
+          }
+          return val;
+        });
       });
     }
   }
@@ -124,9 +131,6 @@ class AddPlayListBody extends StatelessWidget {
       children: [
         FormBuilder(
           key: _formKey,
-          initialValue: const {
-            'playlist_id': 'PLqUpluuk47ROmVDynnfNsuYUuCQIumqLE',
-          },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -134,9 +138,9 @@ class AddPlayListBody extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 child: FormBuilderTextField(
                   name: 'playlist_id',
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: UnderlineInputBorder(),
-                    labelText: 'Enter the playlist ID or URL',
+                    labelText: local(context).enterPlaylistId,
                   ),
                   validator: FormBuilderValidators.required(),
                 ),
@@ -147,7 +151,7 @@ class AddPlayListBody extends StatelessWidget {
                   alignment: Alignment.center,
                   child: FilledButton.icon(
                     onPressed: onPressed,
-                    label: const Text('Add'),
+                    label: Text(local(context).addLabel),
                     icon: const Icon(Icons.add),
                   ),
                 ),

@@ -1,6 +1,18 @@
 {
-  "appTitle": "flutter_application",
-  "@appTitle": {
-    "description": "The title of the application"
-  }
+  "appTitle": "My Youtube Music",
+  "homePageTitle": "My Playlists",
+  "addPlaylistPageTitle": "Add New Playlist",
+  "viewPlaylistPageTitle": "Add New Playlist",
+  "addNewPlaylist": "Add new playlist",
+  "enterPlaylistId": "Enter the playlist ID or URL",
+  "playlistNotFound": "No playlist was found.",
+  "playlistNotFoundOrError": "The playlist was not found or an error occurred while retrieving it. Check if the URL or playlist ID is correct.",
+  "playlistAdded": "Playlist successfully added.",
+  "trackCount": "{count, plural, =0{no tracks} =1{1 track} other{{count} tracks}}",
+  "processingMessage": "Processing, please wait...",
+  "removePlaylistConfirm": "Do you really want to remove the playlist \"{playlist}\"?",
+  "addLabel": "Add",
+  "removeLabel": "Remove",
+  "yesLabel": "Yes",
+  "noLabel": "No"
 }

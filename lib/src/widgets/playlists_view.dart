@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:ytmusic/src/pages/view_playlist.dart';
+import 'package:ytmusic/src/services.dart';
 import 'package:ytmusic/src/ytmusic_api/dart_ytmusic_api.dart';
 
 typedef PlaylistRemoveCallback = void Function(PlaylistFull playlist);
@@ -26,7 +27,7 @@ class PlaylistsView extends StatelessWidget {
         ),
       );
     }
-    return const Center(child: Text('No playlist was found.'));
+    return Center(child: Text(local(context).playlistNotFound));
   }
 }
 
@@ -50,7 +51,7 @@ class PlaylistDetailView extends StatelessWidget {
                   backgroundColor: Color(0xFFFE4A49),
                   foregroundColor: Colors.white,
                   icon: Icons.delete,
-                  label: 'Remove',
+                  label: local(context).removeLabel,
                 ),
               ],
             ),
@@ -77,18 +78,22 @@ class PlayListItem extends StatelessWidget {
         onTap: readOnly ?? true
             ? null
             : () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ViewPlaylistPage(playlist: playlist),
-                  ),
-                );
+                Services.db.loadTracks(playlist).then((data) {
+                  if (context.mounted) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ViewPlaylistPage(playlist: data),
+                      ),
+                    );
+                  }
+                });
               },
         leading: Image.network(
           playlist.smallThumb,
           width: 96,
           height: 96,
         ),
-        title: Text('${playlist.name} - ${playlist.videoCount} tracks'),
+        title: Text('${playlist.name} - ${local(context).trackCount(playlist.videoCount)}'),
       ),
     );
   }

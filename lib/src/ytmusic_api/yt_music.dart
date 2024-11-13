@@ -1,5 +1,6 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'enums.dart';
 import 'parsers/album_parser.dart';
@@ -105,7 +106,9 @@ class YTMusic {
       config['GL'] = _extractValue(html, r'"GL":"(.*?)"');
       config['HL'] = _extractValue(html, r'"HL":"(.*?)"');
     } catch (e) {
-      print('Error fetching data: ${e.toString()}');
+      if (kDebugMode) {
+        debugPrint('Error fetching data: ${e.toString()}');
+      }
     }
   }
 
@@ -196,7 +199,9 @@ class YTMusic {
         return jsonData;
       }
     } on DioException catch (e) {
-      print('Failed to make request to ${e.requestOptions.uri} - ${e.response?.statusCode} - [${e.response?.data}]');
+      if (kDebugMode) {
+        debugPrint('Failed to make request to ${e.requestOptions.uri} - ${e.response?.statusCode} - [${e.response?.data}]');
+      }
     }
   }
 

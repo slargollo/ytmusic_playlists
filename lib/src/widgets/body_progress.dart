@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ytmusic/src/services.dart';
 
 class BodyProgress extends StatelessWidget {
   final Widget child;
@@ -55,9 +56,9 @@ class BodyProgressPopup extends StatelessWidget {
             ),
             Container(
               margin: const EdgeInsets.only(top: 25.0),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  "Processing, please wait...",
+                  local(context).processingMessage,
                   style: TextStyle(color: Colors.white),
                 ),
               ),

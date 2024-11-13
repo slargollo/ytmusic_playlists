@@ -1,18 +1,19 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:ytmusic/src/services/database.dart';
 import 'package:ytmusic/src/services/ytmusic.dart';
-import 'package:ytmusic/src/ytmusic_api/dart_ytmusic_api.dart';
-
-part 'services.g.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 final getIt = GetIt.instance;
 
-@riverpod
-Future<List<PlaylistFull>> playlists(Ref ref) {
-  return Services.db.loadPlaylists();
+AppLocalizations local(BuildContext context) {
+  return AppLocalizations.of(context)!;
 }
+
+// @riverpod
+// Future<List<PlaylistFull>> playlists(Ref ref) {
+//   return Services.db.loadPlaylists();
+// }
 
 class Services {
   static Future<void> initialize() async {

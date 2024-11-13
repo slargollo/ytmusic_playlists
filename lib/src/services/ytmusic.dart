@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:ytmusic/src/services.dart';
 
 import '../ytmusic_api/types.dart';
@@ -27,7 +28,9 @@ class YTMusicService {
       // }
       await Services.db.addPlaylist(playlist);
     } catch (err) {
-      print(err);
+      if (kDebugMode) {
+        debugPrint('$err');
+      }
     }
     return playlist;
   }
@@ -35,19 +38,4 @@ class YTMusicService {
   Future<bool> removePlaylist(String playlistId) async {
     return await Services.db.removePlaylist(playlistId);
   }
-
-  // Future<List<SongDetailed>> searchSongs(String query) async {
-  //   final results = await _ytMusic.searchSongs(query);
-  //   return results;
-  // }
-
-  // Future<List<PlaylistDetailed>> searchPlaylists(String query) async {
-  //   final results = await _ytMusic.searchPlaylists(query);
-  //   return results;
-  // }
-
-  // Future<PlaylistFull> getPlaylist(String playlistId) async {
-  //   final results = await _ytMusic.getPlaylist(playlistId);
-  //   return results;
-  // }
 }

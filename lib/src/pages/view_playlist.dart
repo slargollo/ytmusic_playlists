@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ytmusic/src/services.dart';
 import 'package:ytmusic/src/ytmusic_api/dart_ytmusic_api.dart';
 
 class ViewPlaylistPage extends StatelessWidget {
@@ -10,7 +11,7 @@ class ViewPlaylistPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Playlist'),
+        title: Text(local(context).viewPlaylistPageTitle),
       ),
       body: Column(
         children: [
@@ -47,7 +48,7 @@ class ViewPlaylistPage extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text('${playlist.videoCount} tracks'),
+                        Text(local(context).trackCount(playlist.videoCount)),
                       ],
                     ),
                   ),
@@ -56,21 +57,23 @@ class ViewPlaylistPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: playlist.tracks.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(playlist.tracks[index].title),
-                      Text('${playlist.tracks[index].album.name} - ${playlist.tracks[index].length}'),
-                    ],
+            child: playlist.tracks.isEmpty
+                ? Container()
+                : ListView.builder(
+                    itemCount: playlist.tracks.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(playlist.tracks[index].title),
+                            Text('${playlist.tracks[index].album.name} - ${playlist.tracks[index].length}'),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           )
         ],
       ),

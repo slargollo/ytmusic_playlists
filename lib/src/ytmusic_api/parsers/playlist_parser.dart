@@ -2,6 +2,12 @@ import '../types.dart';
 import '../utils/filters.dart';
 import '../utils/traverse.dart';
 
+final String emptyArtistName = '(unknown artist)';
+final String emptyArtistId = emptyArtistName.hashCode.toString();
+
+final String emptyAlbumName = '(unknown album)';
+final String emptyAlbumId = emptyAlbumName.hashCode.toString();
+
 class PlaylistParser {
   static PlaylistFull parse(dynamic data, String playlistId) {
     final artist = traverse(data, ["tabs", "straplineTextOne"]);
@@ -18,12 +24,12 @@ class PlaylistParser {
           title: traverseString(jsonTracks[i], ["runs", "text"]) ?? "",
           videoId: traverseString(jsonTracks[i], ["runs", "videoId"]) ?? "",
           artist: ArtistBasic(
-            artistId: traverseString(jsonTracks[i + 1], ["runs", "browseId"])!,
-            name: traverseString(jsonTracks[i + 1], ["runs", "text"])!,
+            artistId: traverseString(jsonTracks[i + 1], ["runs", "browseId"]) ?? emptyArtistId,
+            name: traverseString(jsonTracks[i + 1], ["runs", "text"]) ?? emptyArtistName,
           ),
           album: AlbumBasic(
-            albumId: traverseString(jsonTracks[i + 2], ["runs", "browseId"])!,
-            name: traverseString(jsonTracks[i + 2], ["runs", "text"])!,
+            albumId: traverseString(jsonTracks[i + 2], ["runs", "browseId"]) ?? emptyAlbumId,
+            name: traverseString(jsonTracks[i + 2], ["runs", "text"]) ?? emptyAlbumName,
           ),
           length: traverseString(jsonInfo[i ~/ 3], ["runs", "text"]) ?? "",
         ));
