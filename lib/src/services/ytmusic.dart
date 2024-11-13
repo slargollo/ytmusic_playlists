@@ -22,10 +22,6 @@ class YTMusicService {
         playlistId = idOrUrl;
       }
       playlist = await _ytMusic.getPlaylist(playlistId);
-      // for (var track in playlist.tracks) {
-      //   final album = await _ytMusic.getAlbum(track.album.albumId);
-      //   track.album.thumbnail = (album.thumbnails.where((t) => t.width >= 96).firstOrNull ?? album.thumbnails.first).url;
-      // }
       await Services.db.addPlaylist(playlist);
     } catch (err) {
       if (kDebugMode) {
@@ -37,5 +33,21 @@ class YTMusicService {
 
   Future<bool> removePlaylist(String playlistId) async {
     return await Services.db.removePlaylist(playlistId);
+  }
+
+  Future<AlbumBasic> loadAlbum(AlbumBasic album) async {
+    if (!album.hasThumbnail) {
+      AlbumFull? details;
+      try {
+        details = await _ytMusic.getAlbum(album.albumId);
+      } catch (err) {
+        if (kDebugMode) {
+          debugPrint('$err');
+        }
+      }
+      album.thumbnail = (details?.thumbnails.where((a) => a.width >= 96).firstOrNull)?.url ?? emptyThumbnail;
+      return await Services.db.updateAlbum(album);
+    }
+    return album;
   }
 }

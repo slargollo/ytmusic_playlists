@@ -168,13 +168,22 @@ class DatabaseService {
   }
 
   Future<PlaylistFull> _dataToPlaylist(PlaylistTableData data) async {
-    var artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
+    final artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
     return PlaylistFull.fromData(data, ArtistBasic.fromData(artist), []);
   }
 
   Future<PlaylistTrack> _dataToTrack(PlaylistTrackTableData data) async {
-    var artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
-    var album = await (_db.select(_db.albumTable)..where((e) => e.albumId.equals(data.albumId))).getSingle();
+    final artist = await (_db.select(_db.artistTable)..where((e) => e.artistId.equals(data.artistId))).getSingle();
+    final album = await (_db.select(_db.albumTable)..where((e) => e.albumId.equals(data.albumId))).getSingle();
     return PlaylistTrack.fromData(data, ArtistBasic.fromData(artist), AlbumBasic.fromData(album));
+  }
+
+  Future<AlbumBasic> updateAlbum(AlbumBasic album) async {
+    await _db.into(_db.albumTable).insertOnConflictUpdate(AlbumTableCompanion.insert(
+          albumId: album.albumId,
+          name: album.name,
+          thumbnail: album.thumbnail ?? emptyThumbnail,
+        ));
+    return album;
   }
 }

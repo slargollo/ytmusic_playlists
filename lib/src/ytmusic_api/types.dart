@@ -1,5 +1,13 @@
 import 'package:ytmusic/src/services/database.dart';
 
+final String emptyThumbnail = "(empty)";
+
+final String emptyArtistName = '(unknown artist)';
+final String emptyArtistId = emptyArtistName.hashCode.toString();
+
+final String emptyAlbumName = '(unknown album)';
+final String emptyAlbumId = emptyAlbumName.hashCode.toString();
+
 class ThumbnailFull {
   final String url;
   final int width;
@@ -77,7 +85,11 @@ class AlbumBasic {
   AlbumBasic({
     required this.albumId,
     required this.name,
-  });
+  }) {
+    if (albumId == emptyAlbumId) {
+      thumbnail = emptyThumbnail;
+    }
+  }
 
   // Construtor nomeado para criar uma AlbumBasic a partir de um mapa
   AlbumBasic.fromMap(Map<String, dynamic> map)
@@ -88,6 +100,10 @@ class AlbumBasic {
       : albumId = data.albumId,
         name = data.name,
         thumbnail = data.thumbnail;
+
+  bool get hasThumbnail => (thumbnail?.isNotEmpty ?? false) && thumbnail != emptyThumbnail;
+
+  bool get needsThumbnail => (thumbnail?.isEmpty ?? true) || (thumbnail == "");
 }
 
 class SongDetailed {

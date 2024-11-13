@@ -2,12 +2,6 @@ import '../types.dart';
 import '../utils/filters.dart';
 import '../utils/traverse.dart';
 
-final String emptyArtistName = '(unknown artist)';
-final String emptyArtistId = emptyArtistName.hashCode.toString();
-
-final String emptyAlbumName = '(unknown album)';
-final String emptyAlbumId = emptyAlbumName.hashCode.toString();
-
 class PlaylistParser {
   static PlaylistFull parse(dynamic data, String playlistId) {
     final artist = traverse(data, ["tabs", "straplineTextOne"]);
