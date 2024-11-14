@@ -69,6 +69,7 @@ class PlaylistTable extends Table {
 
 class PlaylistTrackTable extends Table {
   IntColumn get id => integer().autoIncrement()();
+  IntColumn get order => integer()();
   TextColumn get playlistId => text().references(PlaylistTable, #playlistId)();
   TextColumn get title => text()();
   TextColumn get artistId => text().references(ArtistTable, #artistId)();
@@ -78,6 +79,7 @@ class PlaylistTrackTable extends Table {
 
   static PlaylistTrackTableCompanion insert(PlaylistTrack track) {
     return PlaylistTrackTableCompanion.insert(
+      order: track.order,
       playlistId: track.playlistId,
       albumId: track.album.albumId,
       artistId: track.artist.artistId!,
@@ -146,7 +148,10 @@ class DatabaseService {
   /// Carrega as músicas de uma playlist
   Future<PlaylistFull> loadTracks(PlaylistFull playlist) async {
     if (playlist.tracks.isEmpty) {
-      final dbtracks = await (_db.select(_db.playlistTrackTable)..where((e) => e.playlistId.equals(playlist.playlistId))).get();
+      final dbtracks = await (_db.select(_db.playlistTrackTable) //
+            ..where((e) => e.playlistId.equals(playlist.playlistId)) //
+            ..orderBy([(c) => OrderingTerm.asc(c.order)]))
+          .get();
       playlist.tracks.addAll(await Future.wait(dbtracks.map(_dataToTrack)));
     }
     return playlist;
@@ -154,7 +159,9 @@ class DatabaseService {
 
   /// Carregas as playlists cadastradas
   Future<List<PlaylistFull>> loadPlaylists() async {
-    final select = await (_db.select(_db.playlistTable)..orderBy([(p) => OrderingTerm(expression: p.name)])).get();
+    final select = await (_db.select(_db.playlistTable) //
+          ..orderBy([(p) => OrderingTerm.asc(p.name)]))
+        .get();
     return await Future.wait(select.map(_dataToPlaylist));
   }
 

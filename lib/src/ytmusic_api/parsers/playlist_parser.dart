@@ -10,10 +10,12 @@ class PlaylistParser {
     final jsonTracks = traverseList(data, ["twoColumnBrowseResultsRenderer", "contents", "flexColumns", "musicResponsiveListItemFlexColumnRenderer"]);
     final jsonInfo = traverseList(data, ["twoColumnBrowseResultsRenderer", "contents", "fixedColumns", "musicResponsiveListItemFixedColumnRenderer"]);
     final videoCount = int.tryParse(traverseList(data, ["tabs", "secondSubtitle", "text"]).elementAt(2).split(" ").first.replaceAll(",", "")) ?? 0;
+    int order = 0;
 
     if (videoCount > 0) {
       for (int i = 0; i < videoCount * 3; i += 3) {
         tracks.add(PlaylistTrack(
+          order: order++,
           playlistId: playlistId,
           title: traverseString(jsonTracks[i], ["runs", "text"]) ?? "",
           videoId: traverseString(jsonTracks[i], ["runs", "videoId"]) ?? "",

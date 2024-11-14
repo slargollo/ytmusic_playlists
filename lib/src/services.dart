@@ -22,10 +22,6 @@ class Services {
     await music.initialize();
   }
 
-  static DatabaseService get db {
-    return getIt<DatabaseService>();
-  }
-
   static YTMusicService get music {
     return getIt<YTMusicService>();
   }

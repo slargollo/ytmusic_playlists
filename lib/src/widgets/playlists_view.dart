@@ -7,10 +7,17 @@ import 'package:ytmusic/src/ytmusic_api/dart_ytmusic_api.dart';
 typedef PlaylistRemoveCallback = void Function(PlaylistFull playlist);
 
 class PlaylistsView extends StatelessWidget {
-  const PlaylistsView({super.key, this.playLists, this.onRemove, this.readOnly});
+  const PlaylistsView({
+    super.key,
+    this.playLists,
+    this.onRemove,
+    this.readOnly,
+    this.onRefresh,
+  });
 
   final List<PlaylistFull>? playLists;
   final PlaylistRemoveCallback? onRemove;
+  final PlaylistRemoveCallback? onRefresh;
   final bool? readOnly;
 
   @override
@@ -23,6 +30,7 @@ class PlaylistsView extends StatelessWidget {
         itemBuilder: (context, index) => PlaylistDetailView(
           playlist: playLists![index],
           onRemove: onRemove,
+          onRefresh: onRefresh,
           readOnly: readOnly,
         ),
       );
@@ -32,23 +40,37 @@ class PlaylistsView extends StatelessWidget {
 }
 
 class PlaylistDetailView extends StatelessWidget {
-  const PlaylistDetailView({super.key, required this.playlist, this.onRemove, this.readOnly});
+  const PlaylistDetailView({
+    super.key,
+    required this.playlist,
+    this.onRemove,
+    this.readOnly,
+    this.onRefresh,
+  });
 
   final PlaylistFull playlist;
   final PlaylistRemoveCallback? onRemove;
+  final PlaylistRemoveCallback? onRefresh;
   final bool? readOnly;
 
   @override
   Widget build(BuildContext context) {
-    return (readOnly ?? true) || onRemove == null
+    return (readOnly ?? true)
         ? PlayListItem(playlist: playlist)
         : Slidable(
             endActionPane: ActionPane(
               motion: ScrollMotion(),
               children: [
                 SlidableAction(
+                  onPressed: (ctx) => onRefresh!(playlist),
+                  backgroundColor: Colors.blue[600]!,
+                  foregroundColor: Colors.white,
+                  icon: Icons.refresh,
+                  label: local(context).refreshLabel,
+                ),
+                SlidableAction(
                   onPressed: (ctx) => onRemove!(playlist),
-                  backgroundColor: Color(0xFFFE4A49),
+                  backgroundColor: Colors.red[600]!,
                   foregroundColor: Colors.white,
                   icon: Icons.delete,
                   label: local(context).removeLabel,
@@ -78,7 +100,7 @@ class PlayListItem extends StatelessWidget {
         onTap: readOnly ?? true
             ? null
             : () {
-                Services.db.loadTracks(playlist).then((data) {
+                Services.music.loadTracks(playlist).then((data) {
                   if (context.mounted) {
                     Navigator.of(context).push(
                       MaterialPageRoute(

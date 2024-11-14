@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:ytmusic/src/services.dart';
+import 'package:ytmusic/src/services/database.dart';
 
 import '../ytmusic_api/types.dart';
 import '../ytmusic_api/yt_music.dart';
 
 class YTMusicService {
   late YTMusic _ytMusic;
+
+  DatabaseService get _db => getIt<DatabaseService>();
 
   Future<void> initialize() async {
     _ytMusic = YTMusic();
@@ -22,7 +25,7 @@ class YTMusicService {
         playlistId = idOrUrl;
       }
       playlist = await _ytMusic.getPlaylist(playlistId);
-      await Services.db.addPlaylist(playlist);
+      await _db.addPlaylist(playlist);
     } catch (err) {
       if (kDebugMode) {
         debugPrint('$err');
@@ -32,22 +35,47 @@ class YTMusicService {
   }
 
   Future<bool> removePlaylist(String playlistId) async {
-    return await Services.db.removePlaylist(playlistId);
+    return await _db.removePlaylist(playlistId);
   }
 
-  Future<AlbumBasic> loadAlbum(AlbumBasic album) async {
-    if (!album.hasThumbnail) {
-      AlbumFull? details;
+  Future<AlbumBasic> loadAlbum(PlaylistTrack track) async {
+    if (!track.album.hasThumbnail) {
       try {
-        details = await _ytMusic.getAlbum(album.albumId);
+        if (track.album.isEmpty) {
+          final song = await _ytMusic.getSong(track.videoId);
+          // debugPrint('---------------------------');
+          // debugPrint(track.title);
+          // song.thumbnails.forEach((t) {
+          //   debugPrint('${t.url} - ${t.width} : ${t.height}');
+          // });
+          // debugPrint('---------------------------');
+          track.album.thumbnail = (song.thumbnails.where((a) => a.width >= 96).firstOrNull)?.url ?? emptyThumbnail;
+        } else {
+          final details = await _ytMusic.getAlbum(track.album.albumId);
+          track.album.thumbnail = (details.thumbnails.where((a) => a.width >= 96).firstOrNull)?.url ?? emptyThumbnail;
+        }
       } catch (err) {
         if (kDebugMode) {
           debugPrint('$err');
+          track.album.thumbnail = emptyThumbnail;
         }
       }
-      album.thumbnail = (details?.thumbnails.where((a) => a.width >= 96).firstOrNull)?.url ?? emptyThumbnail;
-      return await Services.db.updateAlbum(album);
+      return await _db.updateAlbum(track.album);
     }
-    return album;
+    return track.album;
+  }
+
+  Future<List<PlaylistFull>> loadPlaylists() async {
+    return await _db.loadPlaylists();
+  }
+
+  Future<List<PlaylistFull>> refreshPlaylist(PlaylistFull playlist) async {
+    await removePlaylist(playlist.playlistId);
+    await addPlaylist(playlist.playlistId);
+    return await loadPlaylists();
+  }
+
+  Future<PlaylistFull> loadTracks(PlaylistFull playlist) async {
+    return await _db.loadTracks(playlist);
   }
 }

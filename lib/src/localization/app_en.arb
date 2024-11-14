@@ -2,7 +2,8 @@
   "appTitle": "My Youtube Music",
   "homePageTitle": "My Playlists",
   "addPlaylistPageTitle": "Add New Playlist",
-  "viewPlaylistPageTitle": "Add New Playlist",
+  "viewPlaylistPageTitle": "View Playlist",
+  "playerPageTitle": "Player",
   "addNewPlaylist": "Add new playlist",
   "enterPlaylistId": "Enter the playlist ID or URL",
   "playlistNotFound": "No playlist was found.",
@@ -14,5 +15,6 @@
   "addLabel": "Add",
   "removeLabel": "Remove",
   "yesLabel": "Yes",
-  "noLabel": "No"
+  "noLabel": "No",
+  "refreshLabel": "Refresh"
 }

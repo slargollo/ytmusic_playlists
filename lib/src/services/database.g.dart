@@ -928,6 +928,11 @@ class $PlaylistTrackTableTable extends PlaylistTrackTable
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _orderMeta = const VerificationMeta('order');
+  @override
+  late final GeneratedColumn<int> order = GeneratedColumn<int>(
+      'order', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _playlistIdMeta =
       const VerificationMeta('playlistId');
   @override
@@ -973,7 +978,7 @@ class $PlaylistTrackTableTable extends PlaylistTrackTable
       type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, playlistId, title, artistId, albumId, videoId, length];
+      [id, order, playlistId, title, artistId, albumId, videoId, length];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -987,6 +992,12 @@ class $PlaylistTrackTableTable extends PlaylistTrackTable
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('order')) {
+      context.handle(
+          _orderMeta, order.isAcceptableOrUnknown(data['order']!, _orderMeta));
+    } else if (isInserting) {
+      context.missing(_orderMeta);
     }
     if (data.containsKey('playlist_id')) {
       context.handle(
@@ -1037,6 +1048,8 @@ class $PlaylistTrackTableTable extends PlaylistTrackTable
     return PlaylistTrackTableData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      order: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}order'])!,
       playlistId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}playlist_id'])!,
       title: attachedDatabase.typeMapping
@@ -1061,6 +1074,7 @@ class $PlaylistTrackTableTable extends PlaylistTrackTable
 class PlaylistTrackTableData extends DataClass
     implements Insertable<PlaylistTrackTableData> {
   final int id;
+  final int order;
   final String playlistId;
   final String title;
   final String artistId;
@@ -1069,6 +1083,7 @@ class PlaylistTrackTableData extends DataClass
   final String length;
   const PlaylistTrackTableData(
       {required this.id,
+      required this.order,
       required this.playlistId,
       required this.title,
       required this.artistId,
@@ -1079,6 +1094,7 @@ class PlaylistTrackTableData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['order'] = Variable<int>(order);
     map['playlist_id'] = Variable<String>(playlistId);
     map['title'] = Variable<String>(title);
     map['artist_id'] = Variable<String>(artistId);
@@ -1091,6 +1107,7 @@ class PlaylistTrackTableData extends DataClass
   PlaylistTrackTableCompanion toCompanion(bool nullToAbsent) {
     return PlaylistTrackTableCompanion(
       id: Value(id),
+      order: Value(order),
       playlistId: Value(playlistId),
       title: Value(title),
       artistId: Value(artistId),
@@ -1105,6 +1122,7 @@ class PlaylistTrackTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PlaylistTrackTableData(
       id: serializer.fromJson<int>(json['id']),
+      order: serializer.fromJson<int>(json['order']),
       playlistId: serializer.fromJson<String>(json['playlistId']),
       title: serializer.fromJson<String>(json['title']),
       artistId: serializer.fromJson<String>(json['artistId']),
@@ -1118,6 +1136,7 @@ class PlaylistTrackTableData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'order': serializer.toJson<int>(order),
       'playlistId': serializer.toJson<String>(playlistId),
       'title': serializer.toJson<String>(title),
       'artistId': serializer.toJson<String>(artistId),
@@ -1129,6 +1148,7 @@ class PlaylistTrackTableData extends DataClass
 
   PlaylistTrackTableData copyWith(
           {int? id,
+          int? order,
           String? playlistId,
           String? title,
           String? artistId,
@@ -1137,6 +1157,7 @@ class PlaylistTrackTableData extends DataClass
           String? length}) =>
       PlaylistTrackTableData(
         id: id ?? this.id,
+        order: order ?? this.order,
         playlistId: playlistId ?? this.playlistId,
         title: title ?? this.title,
         artistId: artistId ?? this.artistId,
@@ -1147,6 +1168,7 @@ class PlaylistTrackTableData extends DataClass
   PlaylistTrackTableData copyWithCompanion(PlaylistTrackTableCompanion data) {
     return PlaylistTrackTableData(
       id: data.id.present ? data.id.value : this.id,
+      order: data.order.present ? data.order.value : this.order,
       playlistId:
           data.playlistId.present ? data.playlistId.value : this.playlistId,
       title: data.title.present ? data.title.value : this.title,
@@ -1161,6 +1183,7 @@ class PlaylistTrackTableData extends DataClass
   String toString() {
     return (StringBuffer('PlaylistTrackTableData(')
           ..write('id: $id, ')
+          ..write('order: $order, ')
           ..write('playlistId: $playlistId, ')
           ..write('title: $title, ')
           ..write('artistId: $artistId, ')
@@ -1172,13 +1195,14 @@ class PlaylistTrackTableData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, playlistId, title, artistId, albumId, videoId, length);
+  int get hashCode => Object.hash(
+      id, order, playlistId, title, artistId, albumId, videoId, length);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PlaylistTrackTableData &&
           other.id == this.id &&
+          other.order == this.order &&
           other.playlistId == this.playlistId &&
           other.title == this.title &&
           other.artistId == this.artistId &&
@@ -1190,6 +1214,7 @@ class PlaylistTrackTableData extends DataClass
 class PlaylistTrackTableCompanion
     extends UpdateCompanion<PlaylistTrackTableData> {
   final Value<int> id;
+  final Value<int> order;
   final Value<String> playlistId;
   final Value<String> title;
   final Value<String> artistId;
@@ -1198,6 +1223,7 @@ class PlaylistTrackTableCompanion
   final Value<String> length;
   const PlaylistTrackTableCompanion({
     this.id = const Value.absent(),
+    this.order = const Value.absent(),
     this.playlistId = const Value.absent(),
     this.title = const Value.absent(),
     this.artistId = const Value.absent(),
@@ -1207,13 +1233,15 @@ class PlaylistTrackTableCompanion
   });
   PlaylistTrackTableCompanion.insert({
     this.id = const Value.absent(),
+    required int order,
     required String playlistId,
     required String title,
     required String artistId,
     required String albumId,
     required String videoId,
     required String length,
-  })  : playlistId = Value(playlistId),
+  })  : order = Value(order),
+        playlistId = Value(playlistId),
         title = Value(title),
         artistId = Value(artistId),
         albumId = Value(albumId),
@@ -1221,6 +1249,7 @@ class PlaylistTrackTableCompanion
         length = Value(length);
   static Insertable<PlaylistTrackTableData> custom({
     Expression<int>? id,
+    Expression<int>? order,
     Expression<String>? playlistId,
     Expression<String>? title,
     Expression<String>? artistId,
@@ -1230,6 +1259,7 @@ class PlaylistTrackTableCompanion
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (order != null) 'order': order,
       if (playlistId != null) 'playlist_id': playlistId,
       if (title != null) 'title': title,
       if (artistId != null) 'artist_id': artistId,
@@ -1241,6 +1271,7 @@ class PlaylistTrackTableCompanion
 
   PlaylistTrackTableCompanion copyWith(
       {Value<int>? id,
+      Value<int>? order,
       Value<String>? playlistId,
       Value<String>? title,
       Value<String>? artistId,
@@ -1249,6 +1280,7 @@ class PlaylistTrackTableCompanion
       Value<String>? length}) {
     return PlaylistTrackTableCompanion(
       id: id ?? this.id,
+      order: order ?? this.order,
       playlistId: playlistId ?? this.playlistId,
       title: title ?? this.title,
       artistId: artistId ?? this.artistId,
@@ -1263,6 +1295,9 @@ class PlaylistTrackTableCompanion
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (order.present) {
+      map['order'] = Variable<int>(order.value);
     }
     if (playlistId.present) {
       map['playlist_id'] = Variable<String>(playlistId.value);
@@ -1289,6 +1324,7 @@ class PlaylistTrackTableCompanion
   String toString() {
     return (StringBuffer('PlaylistTrackTableCompanion(')
           ..write('id: $id, ')
+          ..write('order: $order, ')
           ..write('playlistId: $playlistId, ')
           ..write('title: $title, ')
           ..write('artistId: $artistId, ')
@@ -2248,6 +2284,7 @@ typedef $$PlaylistTableTableProcessedTableManager = ProcessedTableManager<
 typedef $$PlaylistTrackTableTableCreateCompanionBuilder
     = PlaylistTrackTableCompanion Function({
   Value<int> id,
+  required int order,
   required String playlistId,
   required String title,
   required String artistId,
@@ -2258,6 +2295,7 @@ typedef $$PlaylistTrackTableTableCreateCompanionBuilder
 typedef $$PlaylistTrackTableTableUpdateCompanionBuilder
     = PlaylistTrackTableCompanion Function({
   Value<int> id,
+  Value<int> order,
   Value<String> playlistId,
   Value<String> title,
   Value<String> artistId,
@@ -2325,6 +2363,9 @@ class $$PlaylistTrackTableTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get order => $composableBuilder(
+      column: $table.order, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get title => $composableBuilder(
       column: $table.title, builder: (column) => ColumnFilters(column));
@@ -2408,6 +2449,9 @@ class $$PlaylistTrackTableTableOrderingComposer
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get order => $composableBuilder(
+      column: $table.order, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get title => $composableBuilder(
       column: $table.title, builder: (column) => ColumnOrderings(column));
 
@@ -2489,6 +2533,9 @@ class $$PlaylistTrackTableTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get order =>
+      $composableBuilder(column: $table.order, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
@@ -2586,6 +2633,7 @@ class $$PlaylistTrackTableTableTableManager extends RootTableManager<
                   $db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
+            Value<int> order = const Value.absent(),
             Value<String> playlistId = const Value.absent(),
             Value<String> title = const Value.absent(),
             Value<String> artistId = const Value.absent(),
@@ -2595,6 +2643,7 @@ class $$PlaylistTrackTableTableTableManager extends RootTableManager<
           }) =>
               PlaylistTrackTableCompanion(
             id: id,
+            order: order,
             playlistId: playlistId,
             title: title,
             artistId: artistId,
@@ -2604,6 +2653,7 @@ class $$PlaylistTrackTableTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
+            required int order,
             required String playlistId,
             required String title,
             required String artistId,
@@ -2613,6 +2663,7 @@ class $$PlaylistTrackTableTableTableManager extends RootTableManager<
           }) =>
               PlaylistTrackTableCompanion.insert(
             id: id,
+            order: order,
             playlistId: playlistId,
             title: title,
             artistId: artistId,

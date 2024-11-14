@@ -34,8 +34,10 @@ class PlaylistTrack {
   final String videoId;
   final String length;
   final String playlistId;
+  final int order;
 
   PlaylistTrack({
+    required this.order,
     required this.playlistId,
     required this.title,
     required this.artist,
@@ -46,6 +48,7 @@ class PlaylistTrack {
 
   PlaylistTrack.fromData(PlaylistTrackTableData data, this.artist, this.album)
       : id = data.id,
+        order = data.order,
         title = data.title,
         playlistId = data.playlistId,
         length = data.length,
@@ -85,11 +88,7 @@ class AlbumBasic {
   AlbumBasic({
     required this.albumId,
     required this.name,
-  }) {
-    if (albumId == emptyAlbumId) {
-      thumbnail = emptyThumbnail;
-    }
-  }
+  });
 
   // Construtor nomeado para criar uma AlbumBasic a partir de um mapa
   AlbumBasic.fromMap(Map<String, dynamic> map)
@@ -100,6 +99,8 @@ class AlbumBasic {
       : albumId = data.albumId,
         name = data.name,
         thumbnail = data.thumbnail;
+
+  bool get isEmpty => albumId == emptyAlbumId;
 
   bool get hasThumbnail => (thumbnail?.isNotEmpty ?? false) && thumbnail != emptyThumbnail;
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ytmusic/src/pages/player.dart';
 import 'package:ytmusic/src/services.dart';
 import 'package:ytmusic/src/ytmusic_api/dart_ytmusic_api.dart';
 
@@ -49,7 +50,7 @@ class ViewPlaylistHeader extends StatelessWidget {
             child: Align(
               alignment: Alignment.center,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Image.network(
                   playlist.largeThumb,
                   width: 196,
@@ -60,7 +61,7 @@ class ViewPlaylistHeader extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -74,6 +75,18 @@ class ViewPlaylistHeader extends StatelessWidget {
                     ),
                   ),
                   Text(local(context).trackCount(playlist.videoCount)),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 26),
+                    child: IconButton(
+                      icon: Icon(Icons.play_circle),
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => PlayerPage(playlists: [playlist]),
+                        ));
+                      },
+                      style: ButtonStyle(iconSize: WidgetStateProperty.all(64)),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -95,7 +108,6 @@ class AlbumListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final albumTitle = track.album.name == emptyAlbumName ? track.length : '${track.album.name} - ${track.length}';
     return ListTile(
       title: IntrinsicHeight(
         child: Row(
@@ -104,7 +116,7 @@ class AlbumListTile extends StatelessWidget {
             Center(
               child: track.album.needsThumbnail
                   ? FutureBuilder(
-                      future: Services.music.loadAlbum(track.album),
+                      future: Services.music.loadAlbum(track),
                       builder: (BuildContext context, AsyncSnapshot<AlbumBasic> snapshot) {
                         return AlbumThumbnailWidget(
                           album: snapshot.data,
@@ -116,11 +128,13 @@ class AlbumListTile extends StatelessWidget {
                     ),
             ),
             Flexible(
+              fit: FlexFit.tight,
               child: Padding(
                 padding: EdgeInsets.only(left: 12),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
                   children: [
                     Text(
                       track.title,
@@ -128,10 +142,21 @@ class AlbumListTile extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(albumTitle),
+                    Text(track.album.isEmpty ? track.artist.name : '${track.artist.name} - ${track.album.name}'),
                   ],
                 ),
               ),
+            ),
+            SizedBox(
+              width: 60,
+              child: Center(
+                  child: Text(
+                track.length,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+              )),
             )
           ],
         ),

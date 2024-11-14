@@ -159,7 +159,7 @@ class AddPlayListBody extends StatelessWidget {
             ],
           ),
         ),
-        PlaylistsView(playLists: playLists),
+        Expanded(child: PlaylistsView(playLists: playLists)),
       ],
     );
   }

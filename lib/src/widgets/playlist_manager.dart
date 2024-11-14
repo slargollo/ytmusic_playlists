@@ -20,7 +20,7 @@ class PlaylistManagerState extends State<PlaylistManager> {
   @override
   void initState() {
     super.initState();
-    _rebuildCall = Services.db.loadPlaylists();
+    _rebuildCall = Services.music.loadPlaylists();
   }
 
   @override
@@ -47,6 +47,7 @@ class PlaylistManagerState extends State<PlaylistManager> {
             child: PlaylistsView(
               playLists: snapshot.data,
               onRemove: (p) => _onRemove(context, p),
+              onRefresh: _onRefreshPlaylist,
               readOnly: false,
             ),
           );
@@ -67,7 +68,7 @@ class PlaylistManagerState extends State<PlaylistManager> {
             setState(() {
               _rebuildCall = Services.music
                   .removePlaylist(playlist.playlistId) //
-                  .then((val) => Services.db.loadPlaylists());
+                  .then((val) => Services.music.loadPlaylists());
             });
           },
         ),
@@ -81,8 +82,14 @@ class PlaylistManagerState extends State<PlaylistManager> {
   void _onRefresh(bool changed) {
     if (changed) {
       setState(() {
-        _rebuildCall = Services.db.loadPlaylists();
+        _rebuildCall = Services.music.loadPlaylists();
       });
     }
+  }
+
+  _onRefreshPlaylist(PlaylistFull playlist) {
+    setState(() {
+      _rebuildCall = Services.music.refreshPlaylist(playlist);
+    });
   }
 }
