@@ -5,7 +5,11 @@ class BodyProgress extends StatelessWidget {
   final Widget child;
   final ConnectionState state;
 
-  const BodyProgress({super.key, required this.state, required this.child});
+  const BodyProgress({
+    super.key,
+    required this.state,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -110,10 +110,13 @@ class PlayListItem extends StatelessWidget {
                   }
                 });
               },
-        leading: Image.network(
-          playlist.smallThumb,
-          width: 96,
-          height: 96,
+        leading: Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Image.network(
+            playlist.smallThumb,
+            width: 86,
+            height: 86,
+          ),
         ),
         title: Text('${playlist.name} - ${local(context).trackCount(playlist.videoCount)}'),
       ),

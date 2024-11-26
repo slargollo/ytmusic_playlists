@@ -3,8 +3,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ytmusic/src/pages/home.dart';
 import 'package:ytmusic/src/services.dart';
+import 'package:ytmusic/src/y_player/y_player_initializer.dart';
 
 Future<void> main() async {
+  YPlayerInitializer.ensureInitialized();
   runApp(ProviderScope(
     child: FutureBuilder(
       future: Services.initialize(),
