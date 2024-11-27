@@ -43,6 +43,10 @@ class YPlayerController {
   /// Gets the underlying media_kit Player instance.
   Player get player => _player;
 
+  exp.VideoOnlyStreamInfo? _videoStreamInfo;
+
+  exp.AudioOnlyStreamInfo? _audioStreamInfo;
+
   /// Initializes the player with the given YouTube URL and settings.
   ///
   /// This method fetches video information, extracts stream URLs, and sets up
@@ -67,11 +71,11 @@ class YPlayerController {
       final manifest = await _yt.videos.streamsClient.getManifest(video.id);
 
       // Get the highest quality video and audio streams
-      final videoStreamInfo = manifest.videoOnly.withHighestBitrate();
-      final audioStreamInfo = manifest.audioOnly.withHighestBitrate();
+      _videoStreamInfo = manifest.videoOnly.withHighestBitrate();
+      _audioStreamInfo = manifest.audioOnly.withHighestBitrate();
 
-      debugPrint('YPlayerController: Video URL: ${videoStreamInfo.url}');
-      debugPrint('YPlayerController: Audio URL: ${audioStreamInfo.url}');
+      debugPrint('YPlayerController: Video URL: ${_videoStreamInfo!.url}');
+      debugPrint('YPlayerController: Audio URL: ${_audioStreamInfo!.url}');
 
       // Stop any existing playback
       if (isInitialized) {
@@ -80,10 +84,10 @@ class YPlayerController {
       }
 
       // Open the video stream
-      await _player.open(Media(videoStreamInfo.url.toString()), play: false);
+      await _player.open(Media(_videoStreamInfo!.url.toString()), play: false);
 
       // Add the audio track
-      await _player.setAudioTrack(AudioTrack.uri(audioStreamInfo.url.toString()));
+      await _player.setAudioTrack(AudioTrack.uri(_audioStreamInfo!.url.toString()));
 
       // Add a small delay to ensure everything is set up
       await Future.delayed(const Duration(milliseconds: 500));
@@ -172,15 +176,10 @@ class YPlayerController {
     await _player.stop();
     _player = Player();
     _setupPlayerListeners();
-    final video = await _yt.videos.get(_lastInitializedUrl);
-    final manifest = await _yt.videos.streamsClient.getManifest(video.id);
-    // Get the highest quality video and audio streams
-    final videoStreamInfo = manifest.videoOnly.withHighestBitrate();
-    final audioStreamInfo = manifest.audioOnly.withHighestBitrate();
     // Open the video stream
-    await _player.open(Media(videoStreamInfo.url.toString()), play: false);
+    await _player.open(Media(_videoStreamInfo!.url.toString()), play: false);
     // Add the audio track
-    await _player.setAudioTrack(AudioTrack.uri(audioStreamInfo.url.toString()));
+    await _player.setAudioTrack(AudioTrack.uri(_audioStreamInfo!.url.toString()));
     // Add a small delay to ensure everything is set up
     await Future.delayed(const Duration(milliseconds: 500));
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ytmusic/src/pages/player.dart';
 import 'package:ytmusic/src/services.dart';
+import 'package:ytmusic/src/widgets/image_thumbnail.dart';
+import 'package:ytmusic/src/widgets/track_list_tile.dart';
 import 'package:ytmusic/src/ytmusic_api/dart_ytmusic_api.dart';
 
 class ViewPlaylistPage extends StatelessWidget {
@@ -22,7 +24,7 @@ class ViewPlaylistPage extends StatelessWidget {
                 ? Container()
                 : ListView.builder(
                     itemCount: playlist.tracks.length,
-                    itemBuilder: (context, index) => AlbumListTile(track: playlist.tracks[index]),
+                    itemBuilder: (context, index) => TrackListTile(track: playlist.tracks[index]),
                   ),
           )
         ],
@@ -93,124 +95,6 @@ class ViewPlaylistHeader extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class AlbumListTile extends StatelessWidget {
-  const AlbumListTile({
-    super.key,
-    required this.track,
-  });
-
-  final PlaylistTrack track;
-  final double trackThumbSize = 56;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: IntrinsicHeight(
-        child: Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Center(
-              child: track.album.needsThumbnail
-                  ? FutureBuilder(
-                      future: Services.music.loadAlbum(track),
-                      builder: (BuildContext context, AsyncSnapshot<AlbumBasic> snapshot) {
-                        return AlbumThumbnailWidget(
-                          album: snapshot.data,
-                          state: snapshot.connectionState,
-                        );
-                      })
-                  : AlbumThumbnailWidget(
-                      album: track.album,
-                    ),
-            ),
-            Flexible(
-              fit: FlexFit.tight,
-              child: Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Text(
-                      track.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(track.album.isEmpty ? track.artist.name : '${track.artist.name} - ${track.album.name}'),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 60,
-              child: Center(
-                  child: Text(
-                track.length,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-              )),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AlbumThumbnailWidget extends StatelessWidget {
-  const AlbumThumbnailWidget({super.key, this.album, this.state});
-
-  final AlbumBasic? album;
-  final ConnectionState? state;
-  final double trackThumbSize = 56;
-
-  @override
-  Widget build(BuildContext context) {
-    return Builder(
-      builder: (BuildContext context) {
-        final realState = state ?? ConnectionState.done;
-        if (realState != ConnectionState.done) {
-          return SizedBox(
-            width: trackThumbSize,
-            height: trackThumbSize,
-            child: Center(
-              child: state == ConnectionState.none
-                  ? Container()
-                  : SizedBox(
-                      width: trackThumbSize - 26,
-                      height: trackThumbSize - 26,
-                      child: CircularProgressIndicator(),
-                    ),
-            ),
-          );
-        }
-        if (album?.hasThumbnail ?? false) {
-          return Image.network(
-            album!.thumbnail!,
-            width: trackThumbSize,
-            height: trackThumbSize,
-          );
-        }
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(),
-          ),
-          child: Image.asset(
-            'assets/empty-album.png',
-            width: trackThumbSize,
-            height: trackThumbSize,
-          ),
-        );
-      },
     );
   }
 }

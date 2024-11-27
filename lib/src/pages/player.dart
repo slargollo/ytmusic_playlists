@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:ytmusic/src/services.dart';
+import 'package:ytmusic/src/widgets/image_thumbnail.dart';
+import 'package:ytmusic/src/widgets/track_list_tile.dart';
 import 'package:ytmusic/src/y_player/enums/y_player_status.dart';
 import 'package:ytmusic/src/y_player/y_player_controller.dart';
 import 'package:ytmusic/src/y_player/y_player_main.dart';
@@ -31,23 +35,24 @@ class PlayerPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(local(context).playerPageTitle),
       ),
-      body: Column(
-        children: [
-          PlayerQueueWidget(
-            tracks: tracks,
-            startTrack: startTrack,
-          ),
-        ],
+      body: PlayerQueueWidget(
+        tracks: tracks,
+        startTrack: startTrack,
       ),
     );
   }
 }
 
 class PlayerQueueWidget extends StatefulWidget {
-  const PlayerQueueWidget({super.key, required this.tracks, required this.startTrack});
+  const PlayerQueueWidget({
+    super.key,
+    required this.tracks,
+    required this.startTrack,
+  });
+
+  final int startTrack;
 
   final List<PlaylistTrack> tracks;
-  final int startTrack;
 
   @override
   PlayerQueueWidgetState createState() => PlayerQueueWidgetState();
@@ -66,16 +71,68 @@ class PlayerQueueWidgetState extends State<PlayerQueueWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PlayerWidget(
-      track: currentTrack,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PlayerWidget(
+          trackIndex: trackIndex,
+          tracks: widget.tracks,
+          onNext: _onNext,
+          onPrevious: _onPrevious,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(
+            bottom: 8,
+            left: 8,
+            right: 8,
+          ),
+          child: Text('${(trackIndex + 1).toString().padLeft(widget.tracks.length.toString().length, '0')} / ${widget.tracks.length}'),
+        ),
+        Expanded(
+          child: ScrollablePositionedList.builder(
+            initialScrollIndex: trackIndex,
+            itemCount: widget.tracks.length,
+            itemBuilder: (context, index) => TrackListTile(
+              track: widget.tracks[index],
+              selected: index == trackIndex,
+            ),
+          ),
+        ),
+      ],
     );
+  }
+
+  void _onNext() {
+    if (trackIndex < widget.tracks.length - 1) {
+      setState(() => trackIndex += 1);
+    }
+  }
+
+  void _onPrevious() {
+    if (trackIndex > 0) {
+      setState(() => trackIndex -= 1);
+    }
   }
 }
 
 class PlayerWidget extends StatefulWidget {
-  const PlayerWidget({super.key, required this.track});
+  const PlayerWidget({
+    super.key,
+    required this.trackIndex,
+    required this.tracks,
+    required this.onNext,
+    required this.onPrevious,
+  });
 
-  final PlaylistTrack track;
+  final int trackIndex;
+
+  final List<PlaylistTrack> tracks;
+
+  final VoidCallback onNext;
+
+  final VoidCallback onPrevious;
+
+  PlaylistTrack get track => tracks[trackIndex];
 
   @override
   PlayerWidgetState createState() => PlayerWidgetState();
@@ -93,6 +150,10 @@ class PlayerWidgetState extends State<PlayerWidget> {
   StreamSink<Duration> get _progressSink => _progressController.sink;
 
   Stream<Duration> get _progressStream => _progressController.stream;
+
+  bool get firstTrack => widget.trackIndex == 0;
+
+  bool get lastTrack => widget.trackIndex == widget.tracks.length - 1;
 
   @override
   dispose() {
@@ -130,35 +191,59 @@ class PlayerWidgetState extends State<PlayerWidget> {
                   track: widget.track,
                   stream: _progressStream,
                   controller: snapshot.data!,
+                  canGoNext: !lastTrack,
+                  canGoPrevious: !firstTrack,
+                  onNext: widget.onNext,
+                  onPrevious: widget.onPrevious,
                 );
               }
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 16),
-                  child: CircularProgressIndicator(),
+                  child: Skeletonizer(
+                    enabled: true,
+                    child: AudioPlayer(),
+                  ),
                 ),
               );
-            })
+            }),
       ],
     );
   }
 }
 
 class AudioPlayer extends StatefulWidget {
-  const AudioPlayer({super.key, required this.controller, required this.stream, required this.track});
+  const AudioPlayer({
+    super.key,
+    this.controller,
+    this.stream,
+    this.track,
+    this.onNext,
+    this.onPrevious,
+    this.canGoNext,
+    this.canGoPrevious,
+  });
 
-  final PlaylistTrack track;
+  final PlaylistTrack? track;
 
-  final Stream<Duration> stream;
+  final Stream<Duration>? stream;
 
-  final YPlayerController controller;
+  final YPlayerController? controller;
+
+  final VoidCallback? onNext;
+
+  final VoidCallback? onPrevious;
+
+  final bool? canGoNext;
+
+  final bool? canGoPrevious;
 
   @override
   AudioPlayerState createState() => AudioPlayerState();
 }
 
 class AudioPlayerState extends State<AudioPlayer> {
-  Duration get duration => widget.controller.duration;
+  late bool _processing;
 
   bool get paused => _status == YPlayerStatus.paused;
 
@@ -168,61 +253,67 @@ class AudioPlayerState extends State<AudioPlayer> {
 
   bool get error => _status == YPlayerStatus.error;
 
-  bool _processing = false;
+  Duration get _duration => widget.controller?.duration ?? Duration();
 
-  Duration get _duration => widget.controller.duration;
+  Duration get _position => widget.controller?.position ?? Duration();
 
-  Duration _position = Duration(seconds: 0);
+  YPlayerStatus get _status => widget.controller?.status ?? YPlayerStatus.paused;
 
-  YPlayerStatus get _status => widget.controller.status;
+  @override
+  void initState() {
+    super.initState();
+    _processing = widget.controller == null;
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: widget.stream,
       builder: (BuildContext context, AsyncSnapshot<Duration> snapshot) {
-        double value = 0.0;
-        switch (snapshot.connectionState) {
-          case ConnectionState.active:
-            _position = snapshot.data!;
-            value = duration.inSeconds > 0 ? _position.inSeconds / duration.inSeconds : 0;
-            break;
-          default:
-            break;
-        }
+        var value = _duration.inSeconds > 0 ? _position.inSeconds / _duration.inSeconds : 0.0;
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.track.title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 14),
+                      child: ImageThumbnail(
+                        future: widget.track != null ? Services.music.loadAlbum(widget.track!) : _loadFakeTrack(),
+                        target: widget.track?.album,
+                        trackThumbSize: 96,
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 12),
-                    child: Text(
-                      'by ${widget.track.artist.name}',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  Builder(builder: (context) {
-                    return widget.track.album.isEmpty
-                        ? Container()
-                        : Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.track?.title ?? 'xxxxxx xx xxxxx xxxxxx',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, bottom: 6),
                             child: Text(
-                              widget.track.album.name,
+                              widget.track != null ? 'by ${widget.track!.artist.name}' : 'xxxxxx xx xxxxx xxxxxx',
                               style: TextStyle(fontSize: 16),
                             ),
-                          );
-                  }),
-                ],
+                          ),
+                          Text(
+                            widget.track?.album.name ?? 'xxxxxx xx xxxxx xxxxxx',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Stack(
                 alignment: Alignment.center,
@@ -260,7 +351,7 @@ class AudioPlayerState extends State<AudioPlayer> {
                       children: [
                         PlayerButton(
                           icon: Icons.arrow_circle_left_outlined,
-                          onPressed: !_processing ? _previous : null,
+                          onPressed: !_processing && (widget.canGoPrevious ?? false) ? () => _move(false) : null,
                         ),
                         PlayerButton(
                           icon: Icons.stop_circle_outlined,
@@ -268,7 +359,7 @@ class AudioPlayerState extends State<AudioPlayer> {
                         ),
                         PlayerButton(
                           icon: Icons.arrow_circle_right_outlined,
-                          onPressed: !_processing ? _next : null,
+                          onPressed: !_processing && (widget.canGoNext ?? false) ? () => _move(true) : null,
                         ),
                       ],
                     ),
@@ -289,30 +380,35 @@ class AudioPlayerState extends State<AudioPlayer> {
     return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
-  void _next() {
-    setState(() {
-      _processing = true;
-    });
-    widget.controller.stop().then((_) {
+  void _move(bool next) {
+    if (playing) {
       setState(() {
-        _processing = false;
+        _processing = true;
       });
-    });
-  }
-
-  void _previous() {
-    setState(() => _processing = true);
-    widget.controller.stop().then((_) {
-      setState(() => _processing = false);
-    });
+      widget.controller!.stop().then((_) {
+        setState(() {
+          if (next) {
+            widget.onNext!();
+          } else {
+            widget.onPrevious!();
+          }
+          _processing = false;
+        });
+      });
+    } else {
+      if (next) {
+        widget.onNext!();
+      } else {
+        widget.onPrevious!();
+      }
+    }
   }
 
   void _stop() {
     setState(() {
-      _position = Duration(seconds: 0);
       _processing = true;
     });
-    widget.controller.stop().then((_) {
+    widget.controller!.stop().then((_) {
       setState(() => _processing = false);
     });
   }
@@ -321,13 +417,18 @@ class AudioPlayerState extends State<AudioPlayer> {
     setState(() => _processing = true);
     Future.microtask(() async {
       if (paused || stopped) {
-        await widget.controller.play();
+        await widget.controller!.play();
       } else {
-        await widget.controller.pause();
+        await widget.controller!.pause();
       }
     }).then((_) {
       setState(() => _processing = false);
     });
+  }
+
+  Future<AlbumBasic> _loadFakeTrack() async {
+    await Future.delayed(Duration(seconds: 1));
+    return AlbumBasic(albumId: emptyAlbumId, name: emptyAlbumName);
   }
 }
 

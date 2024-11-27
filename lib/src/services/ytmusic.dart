@@ -27,9 +27,7 @@ class YTMusicService {
       playlist = await _ytMusic.getPlaylist(playlistId);
       await _db.addPlaylist(playlist);
     } catch (err) {
-      if (kDebugMode) {
-        debugPrint('$err');
-      }
+      debugPrint('$err');
     }
     return playlist;
   }
@@ -43,22 +41,14 @@ class YTMusicService {
       try {
         if (track.album.isEmpty) {
           final song = await _ytMusic.getSong(track.videoId);
-          // debugPrint('---------------------------');
-          // debugPrint(track.title);
-          // song.thumbnails.forEach((t) {
-          //   debugPrint('${t.url} - ${t.width} : ${t.height}');
-          // });
-          // debugPrint('---------------------------');
           track.album.thumbnail = (song.thumbnails.where((a) => a.width >= 96).firstOrNull)?.url ?? emptyThumbnail;
         } else {
           final details = await _ytMusic.getAlbum(track.album.albumId);
           track.album.thumbnail = (details.thumbnails.where((a) => a.width >= 96).firstOrNull)?.url ?? emptyThumbnail;
         }
       } catch (err) {
-        if (kDebugMode) {
-          debugPrint('$err');
-          track.album.thumbnail = emptyThumbnail;
-        }
+        debugPrint('$err');
+        track.album.thumbnail = emptyThumbnail;
       }
       return await _db.updateAlbum(track.album);
     }

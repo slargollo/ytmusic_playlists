@@ -8,6 +8,14 @@ final String emptyArtistId = emptyArtistName.hashCode.toString();
 final String emptyAlbumName = '(unknown album)';
 final String emptyAlbumId = emptyAlbumName.hashCode.toString();
 
+abstract class HasThumbnail {
+  bool get hasThumbnail;
+
+  bool get needsThumbnail;
+
+  String? get thumbnail;
+}
+
 class ThumbnailFull {
   final String url;
   final int width;
@@ -80,10 +88,12 @@ class ArtistBasic {
   bool get isValidId => isValid ?? artistId?.trim().isNotEmpty ?? false;
 }
 
-class AlbumBasic {
+class AlbumBasic implements HasThumbnail {
   final String albumId;
+
   final String name;
-  String? thumbnail;
+
+  String? _thumbnail;
 
   AlbumBasic({
     required this.albumId,
@@ -98,12 +108,19 @@ class AlbumBasic {
   AlbumBasic.fromData(AlbumTableData data)
       : albumId = data.albumId,
         name = data.name,
-        thumbnail = data.thumbnail;
+        _thumbnail = data.thumbnail;
 
   bool get isEmpty => albumId == emptyAlbumId;
 
+  @override
+  String? get thumbnail => _thumbnail;
+
+  set thumbnail(String? thumbnail) => _thumbnail = thumbnail;
+
+  @override
   bool get hasThumbnail => (thumbnail?.isNotEmpty ?? false) && thumbnail != emptyThumbnail;
 
+  @override
   bool get needsThumbnail => (thumbnail?.isEmpty ?? true) || (thumbnail == "");
 }
 
